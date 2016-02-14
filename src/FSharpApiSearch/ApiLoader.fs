@@ -209,11 +209,41 @@ let constructorSignature (declaringType: FSharpEntity) (t: FSharpType) =
     return StaticMethod { Arguments = args; ReturnType = fsharpEntityToSignature declaringType }
   }
   
-let toFSharpApi (x: FSharpMemberOrFunctionOrValue) =
+let toModuleValueApi (x: FSharpMemberOrFunctionOrValue) =
   option {
     let! signature = toSignature x.FullType
     return { Name = x.FullName; Kind = ApiKind.ModuleValue ;Signature = signature }
   }
+
+let toExtensionMemberApi (x: FSharpMemberOrFunctionOrValue) =
+  if isMethod x then
+    option {
+      let args = x.FullType.GenericArguments
+      let receiverType = args.[0]
+      let! receiver = toSignature receiverType
+      let! arguments, returnType = methodSignature (args.[1])
+      let name = sprintf "%s.%s.%s" x.EnclosingEntity.FullName receiverType.TypeDefinition.DisplayName x.DisplayName
+      let signature = InstanceMember { Source = Source.Target; Receiver = receiver; Arguments = arguments; ReturnType = returnType }
+      return { Name = name; Kind = ApiKind.Extension ExtensionKind.Method; Signature = signature }
+    }
+  elif x.IsProperty then
+    option {
+      let propertyMethod, propKind = if x.HasSetterMethod then (x.SetterMethod, PropertyKind.Set) else (x.GetterMethod, PropertyKind.Get)
+      let receiverEntity = x.EnclosingEntity
+      let receiver = fsharpEntityToSignature receiverEntity
+      let! returnType = toSignature x.ReturnParameter.Type
+      let name = sprintf "%s.%s.%s" propertyMethod.EnclosingEntity.FullName receiverEntity.DisplayName x.DisplayName
+      let signature = InstanceMember { Source = Source.Target; Receiver = receiver; Arguments = []; ReturnType = returnType }
+      return { Name = name; Kind = ApiKind.Extension (ExtensionKind.Property propKind); Signature = signature }
+    }
+  else
+    None
+
+let toFSharpApi (x: FSharpMemberOrFunctionOrValue) =
+  if x.IsExtensionMember then
+    toExtensionMemberApi x
+  else
+    toModuleValueApi x
 
 let propertyKind (x: FSharpMemberOrFunctionOrValue) =
   if x.HasGetterMethod && x.HasSetterMethod then

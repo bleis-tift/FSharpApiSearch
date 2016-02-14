@@ -197,6 +197,19 @@ module FSharpTest =
     })
   }
 
+  let extensionMethodTest = parameterize {
+    source [
+      "ExtensionMethod.String.Method", [ "System.String => int -> unit" ]
+      "ExtensionMethod.String.Property", [ "System.String => int"; "System.String => string" ]
+//      "ExtensionMethod.String.IndexedProperty", [ "System.String => int -> string"; "System.String => string -> float" ]
+      "ExtensionMethod.List.Method", [ "Microsoft.FSharp.Collections.List<'T> => unit -> int" ]
+      "ExtensionMethod.List.Property", [ "Microsoft.FSharp.Collections.List<'T> => int" ]
+      "ExtensionMethod.[].Method", [ "'T[] => unit -> int" ]
+      "ExtensionMethod.[].Property", [ "'T[] => int" ]
+    ]
+    run testMember
+  }
+
   let apiKindTest = parameterize {
     source [
       "PublicModule.nonGenericFunction", ApiKind.ModuleValue

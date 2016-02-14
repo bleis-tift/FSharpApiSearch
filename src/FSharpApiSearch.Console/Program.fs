@@ -67,6 +67,8 @@ let apiKindText = function
   | ApiKind.StaticProperty prop -> sprintf "static property with %s" (propertyKindText prop)
   | ApiKind.InstanceMethod -> "instance method"
   | ApiKind.InstanceProperty prop -> sprintf "instance property with %s" (propertyKindText prop)
+  | ApiKind.Extension ExtensionKind.Method -> "extension method"
+  | ApiKind.Extension (ExtensionKind.Property prop) -> sprintf "extension property with %s" (propertyKindText prop)
   | ApiKind.Field -> "field"
 
 let searchAndShowResult (client: FSharpApiSearchClient) (query: string) opt =

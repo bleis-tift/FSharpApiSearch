@@ -268,11 +268,17 @@ type PropertyKind =
   | GetSet
 
 [<RequireQualifiedAccess>]
+type ExtensionKind =
+  | Method
+  | Property of PropertyKind
+
+[<RequireQualifiedAccess>]
 type ApiKind =
   | Constructor
   | ModuleValue
   | InstanceMethod
   | InstanceProperty of PropertyKind
+  | Extension of ExtensionKind
   | StaticMethod
   | StaticProperty of PropertyKind
   | Field
